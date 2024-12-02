@@ -1,0 +1,174 @@
+1)Write a program to perform encryption and decryption using Caesar cipher
+(substitutional cipher).
+
+
+def caesar_cipher_encrypt(text, shift):
+    encrypted_text = ""
+    for char in text:
+        if char.isalpha():
+            start = ord('A') if char.isupper() else ord('a')
+            encrypted_text += chr((ord(char) - start + shift) % 26 + start)
+        else:
+            encrypted_text += char
+    return encrypted_text
+
+def caesar_cipher_decrypt(text, shift):
+    decrypted_text = ""
+    for char in text:
+        if char.isalpha():
+            start = ord('A') if char.isupper() else ord('a')
+            decrypted_text += chr((ord(char) - start - shift) % 26 + start)
+        else:
+            decrypted_text += char
+    return decrypted_text
+
+text = input("Enter text: ")
+shift = int(input("Enter shift value: "))
+encrypted = caesar_cipher_encrypt(text, shift)
+decrypted = caesar_cipher_decrypt(encrypted, shift)
+
+print(f"Encrypted: {encrypted}")
+print(f"Decrypted: {decrypted}")
+
+
+2) Write a program to perform encryption and decryption using Rail Fence Cipher
+(transpositional cipher)
+
+def rail_fence_encrypt(text, key):
+    rail = [['' for _ in range(len(text))] for _ in range(key)]
+    direction_down = False
+    row, col = 0, 0
+    for char in text:
+        if row == 0 or row == key - 1:
+            direction_down = not direction_down
+        rail[row][col] = char
+        col += 1
+        row += 1 if direction_down else -1
+    return ''.join(''.join(rail[row]) for row in range(key))
+
+def rail_fence_decrypt(cipher, key):
+    rail = [['' for _ in range(len(cipher))] for _ in range(key)]
+    direction_down = None
+    row, col = 0, 0
+    for _ in range(len(cipher)):
+        if row == 0:
+            direction_down = True
+        if row == key - 1:
+            direction_down = False
+        rail[row][col] = '*'
+        col += 1
+        row += 1 if direction_down else -1
+    index = 0
+    for row in range(key):
+        for col in range(len(cipher)):
+            if rail[row][col] == '*' and index < len(cipher):
+                rail[row][col] = cipher[index]
+                index += 1
+    result = []
+    row, col = 0, 0
+    for _ in range(len(cipher)):
+        if row == 0:
+            direction_down = True
+        if row == key - 1:
+            direction_down = False
+        result.append(rail[row][col])
+        col += 1
+        row += 1 if direction_down else -1
+    return ''.join(result)
+
+text = input("Enter text: ")
+key = int(input("Enter key: "))
+encrypted = rail_fence_encrypt(text, key)
+decrypted = rail_fence_decrypt(encrypted, key)
+
+print(f"Encrypted: {encrypted}")
+print(f"Decrypted: {decrypted}")
+
+
+3)  Write a Python program that defines a function and takes a password string as input and
+returns its SHA-256 hashed representation as a hexadecimal string.
+
+
+import hashlib
+
+def hash_password_sha256(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+password = input("Enter password: ")
+hashed_password = hash_password_sha256(password)
+print(f"SHA-256 Hashed Password: {hashed_password}")
+
+
+4)  Write a Python program that reads a file containing a list of usernames and passwords,
+one pair per line (separated by a comma). It checks each password to see if it has been
+leaked in a data breach. You can use the "Have I Been Pwned" API
+(https://haveibeenpwned.com/API/v3) to check if a password has been leaked.
+
+
+import hashlib
+import requests
+
+def check_password_pwned(password):
+    sha1_hash = hashlib.sha1(password.encode()).hexdigest().upper()
+    prefix, suffix = sha1_hash[:5], sha1_hash[5:]
+    response = requests.get(f"https://api.pwnedpasswords.com/range/{prefix}")
+    if response.status_code == 200:
+        hashes = (line.split(':') for line in response.text.splitlines())
+        return any(h == suffix for h, _ in hashes)
+    return False
+
+def check_passwords_in_file(file_path):
+    with open(file_path, 'r') as file:
+        for line in file:
+            username, password = line.strip().split(',')
+            if check_password_pwned(password):
+                print(f"WARNING: Password for {username} has been leaked!")
+            else:
+                print(f"Password for {username} is safe.")
+
+file_path = input("Enter the file path: ")
+check_passwords_in_file(file_path)
+
+
+
+5)  Write a Python program that generates a password using a random combination of
+words from a dictionary file.
+
+
+import random
+
+def generate_password_from_dictionary(dictionary_file, num_words):
+    with open(dictionary_file, 'r') as file:
+        words = [line.strip() for line in file if line.strip()]
+    return '-'.join(random.choice(words) for _ in range(num_words))
+
+dictionary_file = input("Enter the dictionary file path: ")
+num_words = int(input("Enter the number of words for the password: "))
+password = generate_password_from_dictionary(dictionary_file, num_words)
+print(f"Generated Password: {password}")
+
+
+
+6)  Write a Python program that simulates a brute-force attack on a password by trying out
+all possible character combinations.
+
+
+import itertools
+import string
+
+def brute_force_password(target_password, max_length):
+    characters = string.ascii_letters + string.digits + string.punctuation
+    for length in range(1, max_length + 1):
+        for attempt in itertools.product(characters, repeat=length):
+            attempt_password = ''.join(attempt)
+            if attempt_password == target_password:
+                return attempt_password
+    return None
+
+target_password = input("Enter the target password: ")
+max_length = int(input("Enter the maximum length to try: "))
+result = brute_force_password(target_password, max_length)
+if result:
+    print(f"Password found: {result}")
+else:
+    print("Password not found within the given length.")
